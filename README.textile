@@ -1,0 +1,18 @@
+h2. Documentation
+
+h3. About
+
+This originated as an entry for the An Event Apart 10k "contest":http://10k.aneventapart.com/.  Inspired by nostalgia and the LOGO turtle drawing program that some of us used to play with back in the day.  It is not an implementation of LOGO, but it does emulate some of the features of the language.  Below is a list of commands.  Happy drawing.
+
+h3. Commands
+
+* *HELP* - Lists all of the available commands
+* *!__n__* - Reruns command where __n__ is the number of the command in history
+* *FORWARD __n__* - Moves the turtle forward __n__ pixels
+* *LEFT __n__* - Turns the turtle __n__ degrees to the left
+* *RIGHT __n__* - Turns the turtle __n__ degrees to the right
+* *PENUP* - Pulls the pen up off the canvas so that if the turtle moves it __will not__ draw a line
+* *PENDOWN* - Puts the pen down on the canvas so that if the turtle moves it __will__ draw a line
+* *HOME* - Moves the turtle back to its starting position
+* *CLEARSCREEN* - Clears the canvas, moves the turtle to its starting position, and resets the command history
+* *CLEAN* - Clears the canvas and resets the command history
