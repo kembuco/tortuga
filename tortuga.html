@@ -1,0 +1,267 @@
+<!doctype html>
+<html>
+	<head>
+		<title>pluma tortuga</title>
+		<style type="text/css">
+			body {background: url("http://img.wallpaperstock.net:81/green-hills-wallpapers_7371_1600x1200.jpg") no-repeat;margin: 20px;}
+			#content {margin: auto;width: 300px;padding:10px;background-color: rgba(223, 223, 223, 0.6);-webkit-border-radius: 5px; -moz-border-radius: 5px;border-radius: 5px;position: relative;}
+			#tortuga {position: absolute;}
+			#workspace {display: block;background-color: #FFF;}
+			#console, #in {background-color: #000; color: white;text-transform: uppercase;font-family:Lucida Console, Monaco, monospace;font-size: 12px;}
+			#console {padding: 5px;margin-top: 10px;width: 290px;opacity: .8;}
+			#in {width: 273px; border: 0; outline-width: 0;}
+			#out {height: 205px;overflow: auto;list-style: none; margin: 0;padding: 0;}
+		</style>
+		<script src="http://ajax.microsoft.com/ajax/jquery/jquery-1.4.2.min.js" type="text/javascript"></script>
+		<script type="text/javascript">
+			(function(undefined){
+				var _pi = parseInt,
+					_ia = "IllegalArgument",
+					_m = Math,
+					_PI = _m.PI,
+					_full = _PI * 2;
+				
+				Tortuga = function(options){
+					var self = this;
+					
+					$.extend(self, {
+						pendown: true,
+						heading: 270,
+						x: 0,
+						y: 0
+					}, options || {});
+					
+					var el = self.el = $(self.el),
+						context = self.context = el[0].getContext("2d"),
+						cursor = self.cursor = $(self.cursor),
+						cursorContext = self.cursorContext = cursor[0].getContext("2d"),
+						x = self.x = this.halfWidth = el.width() / 2,
+						y = self.y = this.halfHeight = el.height() / 2;
+					
+					this.cursorOffset = {
+						x: cursor.width() / 2,
+						y: cursor.height() / 2
+					}
+					this.moveCursor(x, y);
+					this.drawCursor();
+				};
+			
+				Tortuga.prototype = {
+					oob: function(x, y) {
+						return x < 0 || x > this.el.width() || y < 0 || y > this.el.height();
+					},
+					
+					moveCursor: function(x, y) {
+						var self = this,
+							cursor = self.cursor,
+							offset = self.cursorOffset,
+							left = x - offset.x + 10,
+							top = y - offset.y + 10;
+							
+						cursor[self.oob(x, y) ? "hide" : "show"]();
+						cursor.css({top: top, left: left});
+					},
+					
+					drawAnchoredCircle: function(context, x, y, radius, fillStyle, doStroke, headingOffset, distanceOffset) {
+						var angle = (this.heading + (headingOffset || 0)) * _PI / 180,
+							distance = 15 + (distanceOffset || 0),
+							centerX = x + distance * _m.cos(angle),
+							centerY = y + distance * _m.sin(angle);
+
+						context.fillStyle = fillStyle;
+						context.beginPath();
+						context.arc(centerX, centerY, radius, 0, _full, true);
+						context.fill();
+						
+						if (doStroke) {
+							context.stroke();
+						}
+					},
+					
+					drawCursor: function() {
+						var self = this,
+							cursor = self.cursor,
+							context = self.cursorContext,
+							offset = self.cursorOffset,
+							dac = self.drawAnchoredCircle,
+							x = offset.x,
+							y = offset.y,
+							gradient;
+						
+						context.clearRect(0, 0, cursor.width(), cursor.height());
+						context.globalAlpha = 0.6;
+						context.strokeStyle = "#996633";
+						
+						
+						gradient = context.createRadialGradient(x, y, 1, x, y, 10);
+						gradient.addColorStop(0, "#66CC33");
+						gradient.addColorStop(1, "#339900");
+						
+						context.fillStyle = gradient;
+						context.beginPath();
+						context.arc(offset.x, offset.y, 10, 0, _full, true);
+						context.fill();
+						context.stroke();
+						
+						dac.call(self, context, x, y, 5, "#66CC33", true);
+						dac.call(self, context, x, y, 1, "#000000", false, -6, 1);
+						dac.call(self, context, x, y, 1, "#000000", false, 6, 1);
+						dac.call(self, context, x, y, 2, "#66CC33", true, -45, -3);
+						dac.call(self, context, x, y, 2, "#66CC33", true, 45, -3);
+						dac.call(self, context, x, y, 2, "#66CC33", true, -135, -3);
+						dac.call(self, context, x, y, 2, "#66CC33", true, 135, -3);
+					},
+					
+					acceptCommand: function(text) {
+						if (!text) {return;}
+					
+						var directive = this.parseDirective(text);
+						
+						this.runCommand(directive.command, directive.args);
+					},
+					
+					runCommand: function(command, args) {
+						if (command = this.commands[command]) {
+							command.apply(this, args);	
+						}
+					},
+				
+					parseDirective: function(text) {
+						var tokens = text.replace(/[\[|\]]/g, " ").split(" ");
+					
+						return {
+							command: tokens.reverse().pop().replace("?", "p"),
+							args: $.grep(tokens.reverse(), function(entry) { return entry !== ""})
+						}
+					},
+					
+					rotate: function(degrees) {
+						var heading = this.heading + degrees;
+						
+						this.heading = (heading > 360) ? heading % 360 : (heading < 0) ? 360 + (heading % 360) : heading;
+									
+						this.drawCursor();
+					},
+				
+					commands: {
+						clean: function() {
+							var el = this.el;
+							
+							this.context.clearRect(0, 0, el.width(), el.height());
+						},
+						
+						clearscreen: function() {
+							this.runCommand("clean");
+							this.runCommand("home");
+						},
+						
+						home: function() {
+							var self = this;
+							
+							self.x = self.halfWidth;
+							self.y = self.halfHeight;
+							self.heading = 270;
+							
+							self.moveCursor(self.x, self.y);
+							self.drawCursor();
+						},
+						
+						pendown: function() {
+							this.pendown = true;
+						},
+						
+						penup: function() {
+							this.pendown = false;
+						},
+						
+						right: function(degrees) {
+							if (!degrees) {throw _ia;}
+							this.rotate(_pi(degrees));
+						},
+						
+						left: function(degrees) {
+							if (!degrees) {throw _ia;}
+							this.rotate(_pi(degrees) * -1);
+						},
+						
+						forward: function(distance) {
+							if (distance === undefined) {throw _ia}
+							
+							var self = this,
+								math = Math,
+
+								ctx = self.context,
+								pixels = _pi(distance),
+								x = (self.x + pixels * math.cos(self.heading * math.PI / 180)),
+								y = (self.y + pixels * math.sin(self.heading * math.PI / 180));
+
+							if (self.pendown) {	
+								ctx.lineJoin = "miter";
+								ctx.lineCap = "square";
+								ctx.beginPath();
+								ctx.moveTo(self.x, self.y);
+								ctx.lineTo(x, y);
+								ctx.stroke();
+							}
+							
+							self.x = x;
+							self.y = y;
+							self.moveCursor(x, y);
+						}
+					}
+				};
+			
+				$(document).ready(function() {
+					var tortuga = new Tortuga({el: "#workspace", cursor: "#tortuga"}),
+						history = [];
+
+					$("#in").focus().keydown(function(evt) {
+						var value,
+							historyItem,
+							out = $("#out");
+						
+						if (evt.keyCode == "13") {
+							value = $("#in").val().toLowerCase();
+							
+							if (historyItem = value.match(/^!([0-9]*)$/)) {
+								historyItem = _pi(historyItem[1]);
+								
+								if (historyItem = history[historyItem - 1]) {
+									value = historyItem;
+								}
+							}
+							
+							tortuga.acceptCommand(value);
+							
+							if (value == "help") {
+								for (command in tortuga.commands) {
+									out.prepend("<li>" + command + "</li>")
+								}
+								
+								out.prepend("<li>commands:</li>");
+							} else if (value == "clean" || value == "clearscreen") {
+								history = [];
+								out.html("");
+							} else {
+								history.push(value);
+								out.prepend("<li>" + history.length + " " + value + "</li>");
+							}
+							$("#in").val("");
+						}
+					});
+				});
+			})();
+		</script>
+	</head>
+	<body>
+		<div id="content">
+			<canvas id="tortuga" height="42" width="42"></canvas>
+			<canvas id="workspace" height="300" width="300"></canvas>
+			<div id="console">
+				<span id="prompt">$</span>
+				<input type="text" id="in" autocomplete="off"/>
+				<ul id="out"></ul>
+			</div>
+		</div>
+	</body>
+</html>
