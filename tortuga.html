@@ -7,8 +7,9 @@
             #content {margin: auto;width: 300px;padding:10px;padding-bottom: 5px;background-color: rgba(223, 223, 223, 0.6);-webkit-border-radius: 5px; -moz-border-radius: 5px;border-radius: 5px;position: relative;}
             #tortuga {position: absolute;}
             #workspace {display: block;background-color: #FFF;}
-            #console, #in {background-color: #000; color: white;text-transform: uppercase;font-family:Lucida Console, Monaco, monospace;font-size: 12px;}
             #console {padding: 5px;margin-top: 10px;width: 290px;opacity: .8;}
+            #console, #in {background-color: #000; color: white;text-transform: uppercase;font-family:Lucida Console, Monaco, monospace;font-size: 12px;}
+            #console .error {color: red;}
             #in {width: 273px; border: 0; outline-width: 0;}
             #out {height: 205px;overflow: auto;list-style: none; margin: 0;padding: 0;}
             #links a, #links span {float: right;margin-left: 5px;font-family:"Lucida Sans Unicode", "Lucida Grande", sans-serif; font-size: 12px;color: #339900;text-decoration: none;}
@@ -21,7 +22,8 @@
                     _ia = "IllegalArgument",
                     _m = Math,
                     _PI = _m.PI,
-                    _full = _PI * 2;
+                    _full = _PI * 2,
+                    _errors = {"IllegalArgument": "Something is not right with the supplied arguments", "UnknownCommand": "Command not recognized"};
                 
                 Tortuga = function(options){
                     var self = this;
@@ -125,6 +127,8 @@
                     runCommand: function(command, args) {
                         if (command = this.commands[command]) {
                             command.apply(this, args);  
+                        } else {
+                            throw "UnknownCommand";
                         }
                     },
                     
@@ -138,11 +142,39 @@
                     },
                     
                     rotate: function(degrees) {
-                        var heading = this.heading + degrees;
+                        if (!degrees && degrees != 0) {throw _ia;}
                         
-                        this.heading = (heading > 360) ? heading % 360 : (heading < 0) ? 360 + (heading % 360) : heading;
-                                    
-                        this.drawCursor();
+                        var self = this,
+                            heading = self.heading + degrees;
+                        
+                        self.heading = (heading > 360) ? heading % 360 : (heading < 0) ? 360 + (heading % 360) : heading;
+                        self.drawCursor();
+                    },
+                    
+                    move: function(distance) {
+                        if (!distance && distance != 0) {throw _ia;}
+                    
+                        var self = this,
+                            math = Math,
+                            pi = math.PI,
+                            heading = self.heading,
+                        
+                            ctx = self.context,
+                            x = (self.x + distance * math.cos(heading * pi / 180)),
+                            y = (self.y + distance * math.sin(heading * pi / 180));
+                    
+                        if (self.pendown) { 
+                            ctx.lineJoin = "miter";
+                            ctx.lineCap = "square";
+                            ctx.beginPath();
+                            ctx.moveTo(self.x, self.y);
+                            ctx.lineTo(x, y);
+                            ctx.stroke();
+                        }
+                    
+                        self.x = x;
+                        self.y = y;
+                        self.moveCursor(x, y);
                     },
                     
                     commands: {
@@ -177,38 +209,19 @@
                         },
                         
                         right: function(degrees) {
-                            if (!degrees) {throw _ia;}
                             this.rotate(_pi(degrees));
                         },
                         
                         left: function(degrees) {
-                            if (!degrees) {throw _ia;}
                             this.rotate(_pi(degrees) * -1);
                         },
                         
+                        back: function(distance) {
+                            this.move(_pi(distance) * -1);
+                        },
+                        
                         forward: function(distance) {
-                            if (distance === undefined) {throw _ia}
-                            
-                            var self = this,
-                                math = Math,
-                                
-                                ctx = self.context,
-                                pixels = _pi(distance),
-                                x = (self.x + pixels * math.cos(self.heading * math.PI / 180)),
-                                y = (self.y + pixels * math.sin(self.heading * math.PI / 180));
-                            
-                            if (self.pendown) { 
-                                ctx.lineJoin = "miter";
-                                ctx.lineCap = "square";
-                                ctx.beginPath();
-                                ctx.moveTo(self.x, self.y);
-                                ctx.lineTo(x, y);
-                                ctx.stroke();
-                            }
-                            
-                            self.x = x;
-                            self.y = y;
-                            self.moveCursor(x, y);
+                            this.move(_pi(distance));
                         }
                     }
                 };
@@ -219,6 +232,7 @@
                     
                     $("#in").focus().keydown(function(evt) {
                         var value,
+                            error,
                             historyItem,
                             out = $("#out");
                         
@@ -233,7 +247,11 @@
                                 }
                             }
                             
-                            tortuga.acceptCommand(value);
+                            try {
+                                tortuga.acceptCommand(value);
+                            } catch (e) {
+                                error = _errors[e];
+                            }
                             
                             if (value == "help") {
                                 for (command in tortuga.commands) {
@@ -247,6 +265,10 @@
                             } else {
                                 history.push(value);
                                 out.prepend("<li>" + history.length + " " + value + "</li>");
+                            }
+                            
+                            if (error) {
+                                out.prepend('<li class="error">' + error + '</li>')
                             }
                             $("#in").val("");
                         }

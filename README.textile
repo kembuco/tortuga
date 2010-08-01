@@ -9,6 +9,7 @@ h3. Commands
 * *HELP* - Lists all of the available commands
 * *!__n__* - Reruns command where __n__ is the number of the command in history
 * *FORWARD __n__* - Moves the turtle forward __n__ pixels
+* *BACK __n__* - Moves the turtle back __n__ pixels
 * *LEFT __n__* - Turns the turtle __n__ degrees to the left
 * *RIGHT __n__* - Turns the turtle __n__ degrees to the right
 * *PENUP* - Pulls the pen up off the canvas so that if the turtle moves it __will not__ draw a line
