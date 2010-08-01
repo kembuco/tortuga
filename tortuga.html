@@ -1,16 +1,18 @@
 <!doctype html>
 <html>
     <head>
-        <title>pluma tortuga</title>
+        <title>Tortuga Pen</title>
         <style type="text/css">
             body {background: url("http://img.wallpaperstock.net:81/green-hills-wallpapers_7371_1600x1200.jpg") no-repeat;margin: 20px;}
-            #content {margin: auto;width: 300px;padding:10px;background-color: rgba(223, 223, 223, 0.6);-webkit-border-radius: 5px; -moz-border-radius: 5px;border-radius: 5px;position: relative;}
+            #content {margin: auto;width: 300px;padding:10px;padding-bottom: 5px;background-color: rgba(223, 223, 223, 0.6);-webkit-border-radius: 5px; -moz-border-radius: 5px;border-radius: 5px;position: relative;}
             #tortuga {position: absolute;}
             #workspace {display: block;background-color: #FFF;}
             #console, #in {background-color: #000; color: white;text-transform: uppercase;font-family:Lucida Console, Monaco, monospace;font-size: 12px;}
             #console {padding: 5px;margin-top: 10px;width: 290px;opacity: .8;}
             #in {width: 273px; border: 0; outline-width: 0;}
             #out {height: 205px;overflow: auto;list-style: none; margin: 0;padding: 0;}
+            #links a, #links span {float: right;margin-left: 5px;font-family:"Lucida Sans Unicode", "Lucida Grande", sans-serif; font-size: 12px;color: #339900;text-decoration: none;}
+            #links div {clear: both;}
         </style>
         <script src="http://ajax.microsoft.com/ajax/jquery/jquery-1.4.2.min.js" type="text/javascript"></script>
         <script type="text/javascript">
@@ -261,6 +263,12 @@
                 <span id="prompt">$</span>
                 <input type="text" id="in" autocomplete="off"/>
                 <ul id="out"></ul>
+            </div>
+            <div id="links">
+                <a href="http://wiki.github.com/kembuco/tortuga/">help</a>
+                <span>|</span>
+                <a href="http://github.com/kembuco/tortuga">source</a>
+                <div></div>
             </div>
         </div>
     </body>
