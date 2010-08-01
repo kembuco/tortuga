@@ -23,10 +23,12 @@
                     _m = Math,
                     _PI = _m.PI,
                     _full = _PI * 2,
+                    _aliases = [],
                     _errors = {"IllegalArgument": "Something is not right with the supplied arguments", "UnknownCommand": "Command not recognized"};
                 
                 Tortuga = function(options){
-                    var self = this;
+                    var self = this,
+                        alias = this.alias;
                     
                     $.extend(self, {
                         pendown: true,
@@ -36,18 +38,28 @@
                     }, options || {});
                     
                     var el = self.el = $(self.el),
-                        context = self.context = el[0].getContext("2d"),
                         cursor = self.cursor = $(self.cursor),
-                        cursorContext = self.cursorContext = cursor[0].getContext("2d"),
                         x = self.x = this.halfWidth = el.width() / 2,
                         y = self.y = this.halfHeight = el.height() / 2;
+                        
+                    self.context = el[0].getContext("2d");
+                    self.cursorContext = cursor[0].getContext("2d");
                     
-                    this.cursorOffset = {
+                    self.cursorOffset = {
                         x: cursor.width() / 2,
                         y: cursor.height() / 2
                     }
-                    this.moveCursor(x, y);
-                    this.drawCursor();
+                    self.moveCursor(x, y);
+                    self.drawCursor();
+                    
+                    alias.call(self, "forward", "fd");
+                    alias.call(self, "back", "bk");
+                    alias.call(self, "right", "rt");
+                    alias.call(self, "left", "lt");
+                    alias.call(self, "penup", "pu");
+                    alias.call(self, "pendown", "pd");
+                    alias.call(self, "clearscreen", "clear");
+                    
                 };
                 
                 Tortuga.prototype = {
@@ -137,12 +149,12 @@
                     
                         return {
                             command: tokens.reverse().pop().replace("?", "p"),
-                            args: $.grep(tokens.reverse(), function(entry) { return entry !== ""})
-                        }
+                            args: $.grep(tokens.reverse(), function(entry) { return entry !== ""; })
+                        };
                     },
                     
                     rotate: function(degrees) {
-                        if (!degrees && degrees != 0) {throw _ia;}
+                        if (!degrees && degrees !== 0) {throw _ia;}
                         
                         var self = this,
                             heading = self.heading + degrees;
@@ -152,7 +164,7 @@
                     },
                     
                     move: function(distance) {
-                        if (!distance && distance != 0) {throw _ia;}
+                        if (!distance && distance !== 0) {throw _ia;}
                     
                         var self = this,
                             math = Math,
@@ -177,7 +189,20 @@
                         self.moveCursor(x, y);
                     },
                     
+                    alias: function(command, alias) {
+                        var self = this;
+                        
+                        if (!self.commands[command]) {throw _ia;}
+                        
+                        self.commands[alias] = self.commands[command];
+                        _aliases.push(alias);
+                    },
+                    
                     commands: {
+                        alias: function(command, alias) {
+                            this.alias(command, alias);
+                        },
+                        
                         clean: function() {
                             var el = this.el;
                             
@@ -246,20 +271,24 @@
                                     value = historyItem;
                                 }
                             }
+
+                            if (value == "help") {
+                                for (var name in tortuga.commands) {
+                                    if (_aliases.indexOf(name) < 0) { out.prepend("<li>" + name + "</li>"); }
+                                }
+
+                                out.prepend("<li>commands:</li>");
+                                $("#in").val("");
+                                return;
+                            }
                             
                             try {
-                                tortuga.acceptCommand(value);
+                                if (accept) { tortuga.acceptCommand(value); }
                             } catch (e) {
                                 error = _errors[e];
                             }
                             
-                            if (value == "help") {
-                                for (command in tortuga.commands) {
-                                    out.prepend("<li>" + command + "</li>")
-                                }
-                                
-                                out.prepend("<li>commands:</li>");
-                            } else if (value == "clean" || value == "clearscreen") {
+                            if (value == "clean" || value == "clearscreen") {
                                 history = [];
                                 out.html("");
                             } else {
@@ -268,7 +297,7 @@
                             }
                             
                             if (error) {
-                                out.prepend('<li class="error">' + error + '</li>')
+                                out.prepend('<li class="error">' + error + '</li>');
                             }
                             $("#in").val("");
                         }

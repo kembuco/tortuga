@@ -8,6 +8,7 @@ h3. Commands
 
 * *HELP* - Lists all of the available commands
 * *!__n__* - Reruns command where __n__ is the number of the command in history
+* *ALIAS [__command__ __alias__]* - aliases the given command with the new alias e.g. "ALIAS [FORWARD F]"
 * *FORWARD __n__* - Moves the turtle forward __n__ pixels
 * *BACK __n__* - Moves the turtle back __n__ pixels
 * *LEFT __n__* - Turns the turtle __n__ degrees to the left
@@ -17,3 +18,13 @@ h3. Commands
 * *HOME* - Moves the turtle back to its starting position
 * *CLEARSCREEN* - Clears the canvas, moves the turtle to its starting position, and resets the command history
 * *CLEAN* - Clears the canvas and resets the command history
+
+h3. Aliases
+
+* *FORWARD* - FD
+* *BACK* - BK
+* *LEFT* - LT
+* *RIGHT* - RT
+* *PENUP* - PU
+* *PENDOWN* - PD
+* *CLEARSCREEN* - CLEAR
