@@ -3,7 +3,7 @@
     <head>
         <title>Tortuga Pen</title>
         <style type="text/css">
-            body {background-color: #A9E27F;margin: 20px;height: 100%;font-family:"Lucida Sans Unicode", "Lucida Grande", sans-serif;}
+            body {background-color: #A9E27F;height: 100%;font-family:"Lucida Sans Unicode", "Lucida Grande", sans-serif;}
             #content {margin: auto;width: 300px;padding:10px;padding-bottom: 5px;background-color: rgba(223, 223, 223, 0.6);-webkit-border-radius: 5px; -moz-border-radius: 5px;border-radius: 5px;position: relative;}
             #tortuga {position: absolute;z-index: 10;}
             #workspace {display: block;background-color: #FFF;}
@@ -14,6 +14,7 @@
             #out {height: 205px;overflow: auto;list-style: none; margin: 0;padding: 0;}
             #links a, #links span {float: right;margin-left: 5px; font-size: 12px;color: #000;text-decoration: none;}
             #links div {clear: both;}
+            #logo {position:absolute;top: 337px;left: 50px; white-space: nowrap;z-index: -1;font-size: 164px;}
         </style>
         <script src="http://ajax.microsoft.com/ajax/jquery/jquery-1.4.2.min.js" type="text/javascript"></script>
         <script type="text/javascript">
@@ -244,6 +245,7 @@
                             var el = this.el;
                             
                             this.context.clearRect(0, 0, el.width(), el.height());
+                            this.context.lineWidth = 1;
                             this.history = [];
                         },
                         
@@ -269,6 +271,11 @@
                         
                         penup: function() {
                             this.pendown = false;
+                        },
+                        
+                        penwidth: function(width) {
+                            if (!(width = _pi(width))) {throw _ia;}
+                            this.context.lineWidth = width;
                         },
                         
                         right: function(degrees) {
@@ -381,7 +388,14 @@
             			
                         
                     tortuga.drawCursor(logo.getContext("2d"), {height: length, width: length}, {x: length/2, y: length/2}, 300, 5, .8);
-                    $("#logo img").attr("src", logo.toDataURL("image/png"));
+                    
+                    var random = Math.round(Math.random() * 25);
+                    
+                    if (random == 1) {
+                        $("body").css("background-image", "url(" + logo.toDataURL("image/png") + ")");
+                    } else {
+                        $("#logo img").attr("src", logo.toDataURL("image/png")).parent().show();
+                    }
                         
                     console.init();
                 });
@@ -395,12 +409,12 @@
             <div id="console">
                 <span id="prompt">$</span>
                 <input type="text" id="in" autocomplete="off"/>
-                <ul id="out"></ul>
+                <ul id="out"><li>type "help" for commands</li></ul>
             </div>
             <div id="links">
                 <a href="http://kembuco.github.com/tortuga/">latest</a><span>|</span><a href="http://wiki.github.com/kembuco/tortuga/">help</a><span>|</span><a href="http://github.com/kembuco/tortuga">source</a><div></div>
             </div>
         </div>    
-        <div id="logo"><img/></div>
+        <div id="logo" style="display:none;"><img/><span>TORTUGA</span></div>
     </body>
 </html>
