@@ -3,7 +3,7 @@
     <head>
         <title>Tortuga Pen</title>
         <style type="text/css">
-            body {background-color: #A9E27F;margin: 20px;height: 100%;font-family:"Lucida Sans Unicode", "Lucida Grande", sans-serif;}
+            body {background-color: #A9E27F;height: 100%;font-family:"Lucida Sans Unicode", "Lucida Grande", sans-serif;}
             #content {margin: auto;width: 300px;padding:10px;padding-bottom: 5px;background-color: rgba(223, 223, 223, 0.6);-webkit-border-radius: 5px; -moz-border-radius: 5px;border-radius: 5px;position: relative;}
             #tortuga {position: absolute;z-index: 10;}
             #workspace {display: block;background-color: #FFF;}
@@ -14,6 +14,7 @@
             #out {height: 205px;overflow: auto;list-style: none; margin: 0;padding: 0;}
             #links a, #links span {float: right;margin-left: 5px; font-size: 12px;color: #000;text-decoration: none;}
             #links div {clear: both;}
+            #logo {position:absolute;top: 337px;left: 50px; white-space: nowrap;z-index: -1;font-size: 164px;}
         </style>
         <script src="http://ajax.microsoft.com/ajax/jquery/jquery-1.4.2.min.js" type="text/javascript"></script>
         <script type="text/javascript">
@@ -79,15 +80,15 @@
                         cursor.css({top: top, left: left});
                     },
                     
-                    drawAnchoredCircle: function(context, x, y, radius, fillStyle, doStroke, headingOffset, distanceOffset) {
-                        var angle = (this.heading + (headingOffset || 0)) * _PI / 180,
-                            distance = 15 + (distanceOffset || 0),
+                    drawAnchoredCircle: function(context, scale, x, y, radius, fillStyle, doStroke, heading, distanceOffset) {
+                        var angle = heading * _PI / 180,
+                            distance = (15 + (distanceOffset || 0)) * scale,
                             centerX = x + distance * _m.cos(angle),
                             centerY = y + distance * _m.sin(angle);
                         
                         context.fillStyle = fillStyle;
                         context.beginPath();
-                        context.arc(centerX, centerY, radius, 0, _full, true);
+                        context.arc(centerX, centerY, radius * scale, 0, _full, true);
                         context.fill();
                         
                         if (doStroke) {
@@ -95,38 +96,41 @@
                         }
                     },
                     
-                    drawCursor: function() {
+                    drawCursor: function(context, dimensions, offset, heading, scale, alpha) {
                         var self = this,
                             cursor = self.cursor,
-                            context = self.cursorContext,
-                            offset = self.cursorOffset,
+                            context = context || self.cursorContext,
+                            heading = heading || self.heading,
+                            offset = offset || self.cursorOffset,
+                            scale = scale || 1,
                             dac = self.drawAnchoredCircle,
+                            dimensions = dimensions || {},
                             x = offset.x,
                             y = offset.y,
                             gradient;
                         
-                        context.clearRect(0, 0, cursor.width(), cursor.height());
-                        context.globalAlpha = 0.6;
+                        context.clearRect(0, 0, dimensions.width || cursor.width(), dimensions.height || cursor.height());
+                        context.globalAlpha = alpha || 0.6;
                         context.strokeStyle = "#996633";
+                        context.lineWidth = scale;
                         
-                        
-                        gradient = context.createRadialGradient(x, y, 1, x, y, 10);
+                        gradient = context.createRadialGradient(x, y, 1 * scale, x, y, 10 * scale);
                         gradient.addColorStop(0, "#66CC33");
                         gradient.addColorStop(1, "#339900");
                         
                         context.fillStyle = gradient;
                         context.beginPath();
-                        context.arc(offset.x, offset.y, 10, 0, _full, true);
+                        context.arc(offset.x, offset.y, 10 * scale, 0, _full, true);
                         context.fill();
                         context.stroke();
                         
-                        dac.call(self, context, x, y, 5, "#66CC33", true);
-                        dac.call(self, context, x, y, 1, "#000000", false, -6, 1);
-                        dac.call(self, context, x, y, 1, "#000000", false, 6, 1);
-                        dac.call(self, context, x, y, 2, "#66CC33", true, -45, -3);
-                        dac.call(self, context, x, y, 2, "#66CC33", true, 45, -3);
-                        dac.call(self, context, x, y, 2, "#66CC33", true, -135, -3);
-                        dac.call(self, context, x, y, 2, "#66CC33", true, 135, -3);
+                        dac.call(self, context, scale, x, y, 5, "#66CC33", true, heading);
+                        dac.call(self, context, scale, x, y, 1, "#000000", false, heading - 6, 1);
+                        dac.call(self, context, scale, x, y, 1, "#000000", false, heading + 6, 1);
+                        dac.call(self, context, scale, x, y, 2, "#66CC33", true, heading - 45, -3);
+                        dac.call(self, context, scale, x, y, 2, "#66CC33", true, heading + 45, -3);
+                        dac.call(self, context, scale, x, y, 2, "#66CC33", true, heading - 135, -3);
+                        dac.call(self, context, scale, x, y, 2, "#66CC33", true, heading + 135, -3);
                         
                         if (!self.pendown) {
                             self.disableCursor();
@@ -280,6 +284,7 @@
                             var el = this.el;
                             
                             this.context.clearRect(0, 0, el.width(), el.height());
+                            this.context.lineWidth = 1;
                             this.history = [];
                         },
                         
@@ -307,6 +312,11 @@
                         penup: function() {
                             this.pendown = false;
                             this.drawCursor();
+                        },
+                        
+                        penwidth: function(width) {
+                            if (!(width = _pi(width))) {throw _ia;}
+                            this.context.lineWidth = width;
                         },
                         
                         right: function(degrees) {
@@ -364,7 +374,9 @@
                                 try {
                                     messages = tortuga.acceptCommand(value);
                                 } catch (e) {
-                                    error = _errors[e];
+                                    if (!(error = _errors[e])) {
+                                        throw e;
+                                    }
                                 }
 
                                 if (["clean", "clearscreen", "clear"].indexOf(value) != -1) {
@@ -406,7 +418,25 @@
                 
                 $(document).ready(function() {
                     var tortuga = new Tortuga({el: "#workspace", cursor: "#tortuga"}),
-                        console = new TortugaConsole({input: "#in", output: "#out", tortuga: tortuga});
+                        console = new TortugaConsole({input: "#in", output: "#out", tortuga: tortuga}),
+                        logo = document.createElement("canvas"),
+                        length = 200;
+                        
+                        logo.width = length;
+            			logo.height = length;
+            			logo.style.width = length + "px";
+            			logo.style.height = length + "px";
+            			
+                        
+                    tortuga.drawCursor(logo.getContext("2d"), {height: length, width: length}, {x: length/2, y: length/2}, 300, 5, .8);
+                    
+                    var random = Math.round(Math.random() * 25);
+                    
+                    if (random == 1) {
+                        $("body").css("background-image", "url(" + logo.toDataURL("image/png") + ")");
+                    } else {
+                        $("#logo img").attr("src", logo.toDataURL("image/png")).parent().fadeIn(2000);
+                    }
                         
                     console.init();
                 });
@@ -420,14 +450,12 @@
             <div id="console">
                 <span id="prompt">$</span>
                 <input type="text" id="in" autocomplete="off"/>
-                <ul id="out"></ul>
+                <ul id="out"><li>type "help" for commands</li></ul>
             </div>
             <div id="links">
-                <a href="http://wiki.github.com/kembuco/tortuga/">help</a>
-                <span>|</span>
-                <a href="http://github.com/kembuco/tortuga">source</a>
-                <div></div>
+                <a href="http://kembuco.github.com/tortuga/">latest</a><span>|</span><a href="http://wiki.github.com/kembuco/tortuga/">help</a><span>|</span><a href="http://github.com/kembuco/tortuga">source</a><div></div>
             </div>
-        </div>
+        </div>    
+        <div id="logo" style="display:none;"><img/><span>TORTUGA</span></div>
     </body>
 </html>
