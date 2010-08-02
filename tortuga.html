@@ -8,7 +8,7 @@
             #tortuga {position: absolute;z-index: 10;}
             #workspace {display: block;background-color: #FFF;}
             #console {padding: 5px;margin-top: 10px;width: 290px;opacity: .8;}
-            #console, #in {background-color: #000; color: white;text-transform: uppercase;font-family:Lucida Console, Monaco, monospace;font-size: 12px;}
+            #console, #in {background-color: #000; color: #FFF;text-transform: uppercase;font-family:Lucida Console, Monaco, monospace;font-size: 12px;}
             #console .error {color: red;}
             #in {width: 273px; border: 0; outline-width: 0;}
             #out {height: 205px;overflow: auto;list-style: none; margin: 0;padding: 0;}
@@ -61,6 +61,7 @@
                     alias.call(self, "penup", "pu");
                     alias.call(self, "pendown", "pd");
                     alias.call(self, "clearscreen", "clear");
+                    alias.call(self, "moveto", "mv")
                     
                 };
                 
@@ -141,7 +142,6 @@
                         var cursor = this.cursor,
                             context = this.cursorContext,
                             imageData = context.getImageData(0, 0, cursor.width(), cursor.height()),
-                            data = imageData.data,
                             h = imageData.height,
                             w = imageData.width,
                             red,
@@ -155,20 +155,19 @@
                         for (i = 0; i < w; i++) {
                             for(j = 0; j < h; j++) {
                                 index = (i * 4) * w + (j * 4);
-                              	red   = data[index];	  
-                              	green = data[index + 1];
-                              	blue  = data[index + 2];	  
-                              	alpha = data[index + 3];	 
+                              	red   = imageData.data[index];	  
+                              	green = imageData.data[index + 1];
+                              	blue  = imageData.data[index + 2];	  
+                              	alpha = imageData.data[index + 3];	 
                               	average = (red + green + blue) / 3; 	  
 
-                                data[index] = average;	  
-                                data[index + 1] = average;
-                                data[index + 2] = average;
-                                data[index + 3] = alpha;
+                                imageData.data[index] = average;	  
+                                imageData.data[index + 1] = average;
+                                imageData.data[index + 2] = average;
+                                imageData.data[index + 3] = alpha;
                             }
                         }
 
-                        imageData.data = data;
                         context.putImageData(imageData, 0, 0, 0, 0, w, h);
                     },
                     
@@ -212,18 +211,10 @@
                         self.drawCursor();
                     },
                     
-                    move: function(distance) {
-                        if (!distance && distance !== 0) {throw _ia;}
-                    
+                    moveTo: function(x, y) {
                         var self = this,
-                            math = Math,
-                            pi = math.PI,
-                            heading = self.heading,
+                            ctx = self.context;
                         
-                            ctx = self.context,
-                            x = (self.x + distance * math.cos(heading * pi / 180)),
-                            y = (self.y + distance * math.sin(heading * pi / 180));
-                    
                         if (self.pendown) { 
                             ctx.lineJoin = "miter";
                             ctx.beginPath();
@@ -231,10 +222,22 @@
                             ctx.lineTo(x, y);
                             ctx.stroke();
                         }
-                    
+            
                         self.x = x;
                         self.y = y;
                         self.moveCursor(x, y);
+                    },
+                    
+                    move: function(distance) {
+                        if (!distance && distance !== 0) {throw _ia;}
+                    
+                        var self = this,
+                            math = Math,
+                            angle = self.heading * math.PI,
+                            x = (self.x + distance * math.cos(angle / 180)),
+                            y = (self.y + distance * math.sin(angle / 180));
+                        
+                        this.moveTo(x, y);
                     },
                     
                     alias: function(command, alias) {
@@ -333,6 +336,15 @@
                         
                         forward: function(distance) {
                             this.move(_pi(distance));
+                        },
+                        
+                        moveto: function(x, y) {
+                            if (!(x = _pi(x)) || !(y = _pi(y))) {throw _ia;}
+                            this.moveTo(x, y);
+                        },
+                        
+                        exportimage: function() {
+                            document.location.href = this.el[0].toDataURL("image/png").replace("image/png", "image/octet-stream");
                         },
                         
                         help: function() {
@@ -453,7 +465,7 @@
                 <ul id="out"><li>type "help" for commands</li></ul>
             </div>
             <div id="links">
-                <a href="http://kembuco.github.com/tortuga/">latest</a><span>|</span><a href="http://wiki.github.com/kembuco/tortuga/">help</a><span>|</span><a href="http://github.com/kembuco/tortuga">source</a><div></div>
+                <a href="http://kembuco.github.com/tortuga/">latest</a><span>|</span><a href="http://github.com/kembuco/tortuga/issues">reqs/issues</a><span>|</span><a href="http://wiki.github.com/kembuco/tortuga/">help</a><span>|</span><a href="http://github.com/kembuco/tortuga">source</a><div></div>
             </div>
         </div>    
         <div id="logo" style="display:none;"><img/><span>TORTUGA</span></div>

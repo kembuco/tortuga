@@ -18,11 +18,13 @@ h3. Commands
 * *HOME* - Moves the turtle back to its starting position
 * *CLEARSCREEN* - Clears the canvas, moves the turtle to its starting position, and resets the command history
 * *CLEAN* - Clears the canvas and resets the command history
+* *LINEWIDTH* - Sets the width of the pen in pixels
+* *MOVETO __x__ __y__* - Moves the turtle to the supplied coordinates.  Takes pendown/penup state into account 
 
 h4. Experimental
 
-* *SAVEAS __name__* Saves the current command history as a program in localStorage
-* *LOAD __name__* If a program with the given name exists in localStorage, it is loaded and run
+* *SAVEAS __name__* - Saves the current command history as a program in localStorage
+* *LOAD __name__* - If a program with the given name exists in localStorage, it is loaded and run
 
 h3. Aliases
 
