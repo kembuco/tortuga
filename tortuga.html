@@ -79,15 +79,15 @@
                         cursor.css({top: top, left: left});
                     },
                     
-                    drawAnchoredCircle: function(context, x, y, radius, fillStyle, doStroke, headingOffset, distanceOffset) {
-                        var angle = (this.heading + (headingOffset || 0)) * _PI / 180,
-                            distance = 15 + (distanceOffset || 0),
+                    drawAnchoredCircle: function(context, scale, x, y, radius, fillStyle, doStroke, heading, distanceOffset) {
+                        var angle = heading * _PI / 180,
+                            distance = (15 + (distanceOffset || 0)) * scale,
                             centerX = x + distance * _m.cos(angle),
                             centerY = y + distance * _m.sin(angle);
                         
                         context.fillStyle = fillStyle;
                         context.beginPath();
-                        context.arc(centerX, centerY, radius, 0, _full, true);
+                        context.arc(centerX, centerY, radius * scale, 0, _full, true);
                         context.fill();
                         
                         if (doStroke) {
@@ -95,38 +95,41 @@
                         }
                     },
                     
-                    drawCursor: function() {
+                    drawCursor: function(context, dimensions, offset, heading, scale, alpha) {
                         var self = this,
                             cursor = self.cursor,
-                            context = self.cursorContext,
-                            offset = self.cursorOffset,
+                            context = context || self.cursorContext,
+                            heading = heading || self.heading,
+                            offset = offset || self.cursorOffset,
+                            scale = scale || 1,
                             dac = self.drawAnchoredCircle,
+                            dimensions = dimensions || {},
                             x = offset.x,
                             y = offset.y,
                             gradient;
                         
-                        context.clearRect(0, 0, cursor.width(), cursor.height());
-                        context.globalAlpha = 0.6;
+                        context.clearRect(0, 0, dimensions.width || cursor.width(), dimensions.height || cursor.height());
+                        context.globalAlpha = alpha || 0.6;
                         context.strokeStyle = "#996633";
+                        context.lineWidth = scale;
                         
-                        
-                        gradient = context.createRadialGradient(x, y, 1, x, y, 10);
+                        gradient = context.createRadialGradient(x, y, 1 * scale, x, y, 10 * scale);
                         gradient.addColorStop(0, "#66CC33");
                         gradient.addColorStop(1, "#339900");
                         
                         context.fillStyle = gradient;
                         context.beginPath();
-                        context.arc(offset.x, offset.y, 10, 0, _full, true);
+                        context.arc(offset.x, offset.y, 10 * scale, 0, _full, true);
                         context.fill();
                         context.stroke();
                         
-                        dac.call(self, context, x, y, 5, "#66CC33", true);
-                        dac.call(self, context, x, y, 1, "#000000", false, -6, 1);
-                        dac.call(self, context, x, y, 1, "#000000", false, 6, 1);
-                        dac.call(self, context, x, y, 2, "#66CC33", true, -45, -3);
-                        dac.call(self, context, x, y, 2, "#66CC33", true, 45, -3);
-                        dac.call(self, context, x, y, 2, "#66CC33", true, -135, -3);
-                        dac.call(self, context, x, y, 2, "#66CC33", true, 135, -3);
+                        dac.call(self, context, scale, x, y, 5, "#66CC33", true, heading);
+                        dac.call(self, context, scale, x, y, 1, "#000000", false, heading - 6, 1);
+                        dac.call(self, context, scale, x, y, 1, "#000000", false, heading + 6, 1);
+                        dac.call(self, context, scale, x, y, 2, "#66CC33", true, heading - 45, -3);
+                        dac.call(self, context, scale, x, y, 2, "#66CC33", true, heading + 45, -3);
+                        dac.call(self, context, scale, x, y, 2, "#66CC33", true, heading - 135, -3);
+                        dac.call(self, context, scale, x, y, 2, "#66CC33", true, heading + 135, -3);
                     },
                     
                     acceptCommand: function(text, suppressHistory) {
@@ -323,7 +326,9 @@
                                 try {
                                     messages = tortuga.acceptCommand(value);
                                 } catch (e) {
-                                    error = _errors[e];
+                                    if (!(error = _errors[e])) {
+                                        throw e;
+                                    }
                                 }
 
                                 if (["clean", "clearscreen", "clear"].indexOf(value) != -1) {
@@ -365,7 +370,18 @@
                 
                 $(document).ready(function() {
                     var tortuga = new Tortuga({el: "#workspace", cursor: "#tortuga"}),
-                        console = new TortugaConsole({input: "#in", output: "#out", tortuga: tortuga});
+                        console = new TortugaConsole({input: "#in", output: "#out", tortuga: tortuga}),
+                        logo = document.createElement("canvas"),
+                        length = 200;
+                        
+                        logo.width = length;
+            			logo.height = length;
+            			logo.style.width = length + "px";
+            			logo.style.height = length + "px";
+            			
+                        
+                    tortuga.drawCursor(logo.getContext("2d"), {height: length, width: length}, {x: length/2, y: length/2}, 300, 5, .8);
+                    $("#logo img").attr("src", logo.toDataURL("image/png"));
                         
                     console.init();
                 });
@@ -382,11 +398,9 @@
                 <ul id="out"></ul>
             </div>
             <div id="links">
-                <a href="http://wiki.github.com/kembuco/tortuga/">help</a>
-                <span>|</span>
-                <a href="http://github.com/kembuco/tortuga">source</a>
-                <div></div>
+                <a href="http://kembuco.github.com/tortuga/">latest</a><span>|</span><a href="http://wiki.github.com/kembuco/tortuga/">help</a><span>|</span><a href="http://github.com/kembuco/tortuga">source</a><div></div>
             </div>
-        </div>
+        </div>    
+        <div id="logo"><img/></div>
     </body>
 </html>
