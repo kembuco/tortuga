@@ -127,6 +127,10 @@
                         dac.call(self, context, x, y, 2, "#66CC33", true, 45, -3);
                         dac.call(self, context, x, y, 2, "#66CC33", true, -135, -3);
                         dac.call(self, context, x, y, 2, "#66CC33", true, 135, -3);
+                        
+                        if (!self.pendown) {
+                            self.disableCursor();
+                        }
                     },
 
                     disableCursor: function() {
@@ -302,7 +306,7 @@
                         
                         penup: function() {
                             this.pendown = false;
-                            this.disableCursor();
+                            this.drawCursor();
                         },
                         
                         right: function(degrees) {
