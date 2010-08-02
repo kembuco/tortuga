@@ -128,6 +128,41 @@
                         dac.call(self, context, x, y, 2, "#66CC33", true, -135, -3);
                         dac.call(self, context, x, y, 2, "#66CC33", true, 135, -3);
                     },
+
+                    disableCursor: function() {
+                        var cursor = this.cursor,
+                            context = this.cursorContext,
+                            imageData = context.getImageData(0, 0, cursor.width(), cursor.height()),
+                            data = imageData.data,
+                            h = imageData.height,
+                            w = imageData.width,
+                            red,
+                            green,
+                            blue,
+                            alpha,
+                            average,
+                            j,
+                            i;
+
+                        for (i = 0; i < w; i++) {
+                            for(j = 0; j < h; j++) {
+                                index = (i * 4) * w + (j * 4);
+                              	red   = data[index];	  
+                              	green = data[index + 1];
+                              	blue  = data[index + 2];	  
+                              	alpha = data[index + 3];	 
+                              	average = (red + green + blue) / 3; 	  
+
+                                data[index] = average;	  
+                                data[index + 1] = average;
+                                data[index + 2] = average;
+                                data[index + 3] = alpha;
+                            }
+                        }
+
+                        imageData.data = data;
+                        context.putImageData(imageData, 0, 0, 0, 0, w, h);
+                    },
                     
                     acceptCommand: function(text, suppressHistory) {
                         if (!text) {return;}
@@ -262,10 +297,12 @@
                         
                         pendown: function() {
                             this.pendown = true;
+                            this.drawCursor();
                         },
                         
                         penup: function() {
                             this.pendown = false;
+                            this.disableCursor();
                         },
                         
                         right: function(degrees) {
