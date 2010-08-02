@@ -19,6 +19,11 @@ h3. Commands
 * *CLEARSCREEN* - Clears the canvas, moves the turtle to its starting position, and resets the command history
 * *CLEAN* - Clears the canvas and resets the command history
 
+h4. Experimental
+
+* *SAVEAS __name__* Saves the current command history as a program in localStorage
+* *LOAD __name__* If a program with the given name exists in localStorage, it is loaded and run
+
 h3. Aliases
 
 * *FORWARD* - FD

@@ -24,7 +24,7 @@
                     _PI = _m.PI,
                     _full = _PI * 2,
                     _aliases = [],
-                    _errors = {"IllegalArgument": "Something is not right with the supplied arguments", "UnknownCommand": "Command not recognized"};
+                    _errors = {"IllegalArgument": "Something is not right with the supplied arguments", "UnknownCommand": "Command not recognized", "ProcNotFound" : "Couldn't find the specified program"};
                 
                 Tortuga = function(options){
                     var self = this,
@@ -33,6 +33,7 @@
                     $.extend(self, {
                         pendown: true,
                         heading: 270,
+                        history: [],
                         x: 0,
                         y: 0
                     }, options || {});
@@ -128,12 +129,17 @@
                         dac.call(self, context, x, y, 2, "#66CC33", true, 135, -3);
                     },
                     
-                    acceptCommand: function(text) {
+                    acceptCommand: function(text, suppressHistory) {
                         if (!text) {return;}
                     
-                        var directive = this.parseDirective(text);
+                        var self = this,
+                            directive = self.parseDirective(text);
                         
-                        return this.runCommand(directive.command, directive.args);
+                        if (!suppressHistory) {
+                            self.history.push(text);
+                        }
+                        
+                        return self.runCommand(directive.command, directive.args);
                     },
                     
                     runCommand: function(command, args) {
@@ -198,6 +204,35 @@
                     },
                     
                     commands: {
+                        saveas: function(name) {
+                            if (!name) {throw _ia;}
+                            
+                            var history = this.history,
+                                proc = {
+                                    commands: history.slice(0, history.length - 1)
+                                };
+                            
+                            localStorage.setItem(name, JSON.stringify(proc));
+                        },
+                        
+                        load: function(name) {
+                            if (!name) {throw _ia;}
+                            
+                            var proc = localStorage.getItem(name);
+                            
+                            if (proc) {
+                                proc = JSON.parse(proc);
+                                
+                                for (var i = 0, l = proc.commands.length; i < l; i++) {
+                                    try {
+                                        this.acceptCommand(proc.commands[i], true);
+                                    } catch (e) {}
+                                }
+                            } else {
+                                throw "ProcNotFound"
+                            }
+                        },
+                        
                         alias: function(command, alias) {
                             this.alias(command, alias);
                         },
@@ -206,6 +241,7 @@
                             var el = this.el;
                             
                             this.context.clearRect(0, 0, el.width(), el.height());
+                            this.history = [];
                         },
                         
                         clearscreen: function() {
@@ -282,7 +318,7 @@
                                 out = self.output;
 
                             if (evt.keyCode == "13") {
-                                value = self.processBang(input.val().toLowerCase());
+                                value = self.processBang(input.val().toLowerCase(), tortuga.history);
 
                                 try {
                                     messages = tortuga.acceptCommand(value);
@@ -291,11 +327,9 @@
                                 }
 
                                 if (["clean", "clearscreen", "clear"].indexOf(value) != -1) {
-                                    self.history = [];
                                     out.html("");
                                 } else {
-                                    self.history.push(value);
-                                    out.prepend("<li>" + self.history.length + " " + value + "</li>");
+                                    out.prepend("<li>" + tortuga.history.length + " " + value + "</li>");
                                     
                                     if (messages) {
                                         messages = messages.reverse();
@@ -314,14 +348,13 @@
                         });
                     },
                     
-                    processBang: function(value) {
-                        var self = this,
-                            item;
+                    processBang: function(value, history) {
+                        var item;
                         
                         if (item = value.match(/^!([0-9]*)$/)) {
                             item = _pi(item[1]);
 
-                            if (item = self.history[item - 1]) {
+                            if (item = history[item - 1]) {
                                 value = item;
                             }
                         }
