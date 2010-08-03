@@ -12,6 +12,7 @@
             #console .error {color: red;}
             #in {width: 273px; border: 0; outline-width: 0;}
             #out {height: 205px;overflow: auto;list-style: none; margin: 0;padding: 0;}
+            #out li {padding-top: 2px;}
             #links a, #links span {float: right;margin-left: 5px; font-size: 12px;color: #000;text-decoration: none;}
             #links div {clear: both;}
             #logo {position:absolute;top: 337px;left: 50px; white-space: nowrap;z-index: -1;font-size: 164px;}
@@ -25,6 +26,23 @@
                     _PI = _m.PI,
                     _full = _PI * 2,
                     _aliases = [],
+                    _help = {
+                        "help":        ["<em>command</em>", "Lists all of the available commands, or, given a command name, shows the help for the command. e.g. 'HELP ALIAS'"],
+                        "alias":       ["[<em>command</em>  <em>alias</em>]", "Aliases the given command with the new alias. e.g. 'ALIAS [FORWARD F]'"],
+                        "forward":     ["<em>pixels</em>", "Moves the turtle forward <em>n</em> pixels. e.g. 'FORWARD 10'"],
+                        "back":        ["<em>pixels</em>", "Moves the turtle back <em>n</em> pixels. e.g. 'BACK 10'"],
+                        "left":        ["<em>degrees</em>", "Turns the turtle <em>n</em> degrees to the left. e.g. 'LEFT 45'"],
+                        "right":       ["<em>degrees</em>", "Turns the turtle <em>n</em> degrees to the right. e.g. 'RIGHT 45'"],
+                        "penup":       ["", "Pulls the pen up off the canvas so that if the turtle moves it <em>will not<em> draw a line"],
+                        "pendown":     ["", "Puts the pen down on the canvas so that if the turtle moves it <em>will</em> draw a line"],
+                        "home":        ["", "Moves the turtle back to its starting position"],
+                        "clearscreen": ["", "Clears the canvas, moves the turtle to its starting position, and resets the command history"],
+                        "clean":       ["", "Clears the canvas and resets the command history"],
+                        "linewidth":   ["", "<em>pixels</em>", "Sets the width of the pen in pixels. e.g. 'LINEWIDTH 5'"],
+                        "moveto":      ["[<em>x</em> <em>y</em>]", "Moves the turtle to the supplied coordinates. Takes pendown/penup state into account. e.g. 'MOVETO [10 10]'"],
+                        "saveas":      ["<em>name</em>", "Saves the current command history as a program in localStorage. e.g. 'SAVE BOX'"],
+                        "load":        ["<em>name</em>", "If a program with the given name exists in localStorage, it is loaded and run. e.g. 'LOAD BOX'"]
+                    },
                     _errors = {"IllegalArgument": "Something is not right with the supplied arguments", "UnknownCommand": "Command not recognized", "ProcNotFound" : "Couldn't find the specified program"};
                 
                 Tortuga = function(options){
@@ -347,15 +365,24 @@
                             document.location.href = this.el[0].toDataURL("image/png").replace("image/png", "image/octet-stream");
                         },
                         
-                        help: function() {
+                        help: function(command) {
                             var name,
-                                messages = [];
+                                messages = ["------------------------------------"],
+                                help;
                                 
-                            for (var name in this.commands) {
-                                if (_aliases.indexOf(name) < 0) { messages.push(name); }
-                            }
+                            if (command && (help = _help[command])) {    
+                                messages.push(command + " " + help[0]);
+                                messages.push(help[1]);
+                            } else {
+                                for (var name in this.commands) {
+                                    if (_aliases.indexOf(name) < 0) { messages.push(name); }
+                                }
+                                
+                                messages = ["Type 'HELP <em>COMMAND</em>' for more info"].concat(messages.sort());
+                            }    
+                            messages.push("------------------------------------");
                             
-                            return ["commands:"].concat(messages.sort());
+                            return messages;
                         }
                     }
                 };
