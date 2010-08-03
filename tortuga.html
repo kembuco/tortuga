@@ -19,7 +19,7 @@
         </style>
         <script src="http://ajax.microsoft.com/ajax/jquery/jquery-1.4.2.min.js" type="text/javascript"></script>
         <script type="text/javascript">
-            (function(undefined){
+            (function(){
                 var _pi = parseInt,
                     _ia = "IllegalArgument",
                     _m = Math,
@@ -47,7 +47,7 @@
                 
                 Tortuga = function(options){
                     var self = this,
-                        alias = this.alias;
+                        alias = self.alias;
                     
                     $.extend(self, {
                         pendown: true,
@@ -59,8 +59,8 @@
                     
                     var el = self.el = $(self.el),
                         cursor = self.cursor = $(self.cursor),
-                        x = self.x = this.halfWidth = el.width() / 2,
-                        y = self.y = this.halfHeight = el.height() / 2;
+                        x = self.x = self.halfWidth = el.width() / 2,
+                        y = self.y = self.halfHeight = el.height() / 2;
                         
                     self.context = el[0].getContext("2d");
                     self.cursorContext = cursor[0].getContext("2d");
@@ -68,7 +68,7 @@
                     self.cursorOffset = {
                         x: cursor.width() / 2,
                         y: cursor.height() / 2
-                    }
+                    };
                     self.moveCursor(x, y);
                     self.drawCursor();
                     
@@ -79,7 +79,7 @@
                     alias.call(self, "penup", "pu");
                     alias.call(self, "pendown", "pd");
                     alias.call(self, "clearscreen", "clear");
-                    alias.call(self, "moveto", "mv")
+                    alias.call(self, "moveto", "mv");
                     
                 };
                 
@@ -118,15 +118,20 @@
                     drawCursor: function(context, dimensions, offset, heading, scale, alpha) {
                         var self = this,
                             cursor = self.cursor,
-                            context = context || self.cursorContext,
-                            heading = heading || self.heading,
-                            offset = offset || self.cursorOffset,
-                            scale = scale || 1,
                             dac = self.drawAnchoredCircle,
-                            dimensions = dimensions || {},
-                            x = offset.x,
-                            y = offset.y,
-                            gradient;
+                            lightGreen = "#66CC33",
+                            black = "#000000",
+                            cursorOffset = offset || self.cursorOffset,
+                            x = cursorOffset.x,
+                            y = cursorOffset.y,
+                            gradient,
+                            t = true,
+                            f = false;
+                            
+                        dimensions = dimensions || {};
+                        context = context || self.cursorContext;
+                        heading = heading || self.heading;
+                        scale = scale || 1;
                         
                         context.clearRect(0, 0, dimensions.width || cursor.width(), dimensions.height || cursor.height());
                         context.globalAlpha = alpha || 0.6;
@@ -134,22 +139,22 @@
                         context.lineWidth = scale;
                         
                         gradient = context.createRadialGradient(x, y, 1 * scale, x, y, 10 * scale);
-                        gradient.addColorStop(0, "#66CC33");
+                        gradient.addColorStop(0, lightGreen);
                         gradient.addColorStop(1, "#339900");
                         
                         context.fillStyle = gradient;
                         context.beginPath();
-                        context.arc(offset.x, offset.y, 10 * scale, 0, _full, true);
+                        context.arc(x, y, 10 * scale, 0, _full, t);
                         context.fill();
                         context.stroke();
                         
-                        dac.call(self, context, scale, x, y, 5, "#66CC33", true, heading);
-                        dac.call(self, context, scale, x, y, 1, "#000000", false, heading - 6, 1);
-                        dac.call(self, context, scale, x, y, 1, "#000000", false, heading + 6, 1);
-                        dac.call(self, context, scale, x, y, 2, "#66CC33", true, heading - 45, -3);
-                        dac.call(self, context, scale, x, y, 2, "#66CC33", true, heading + 45, -3);
-                        dac.call(self, context, scale, x, y, 2, "#66CC33", true, heading - 135, -3);
-                        dac.call(self, context, scale, x, y, 2, "#66CC33", true, heading + 135, -3);
+                        dac.call(self, context, scale, x, y, 5, lightGreen, t, heading);
+                        dac.call(self, context, scale, x, y, 1, black, f, heading - 6, 1);
+                        dac.call(self, context, scale, x, y, 1, black, f, heading + 6, 1);
+                        dac.call(self, context, scale, x, y, 2, lightGreen, t, heading - 45, -3);
+                        dac.call(self, context, scale, x, y, 2, lightGreen, t, heading + 45, -3);
+                        dac.call(self, context, scale, x, y, 2, lightGreen, t, heading - 135, -3);
+                        dac.call(self, context, scale, x, y, 2, lightGreen, t, heading + 135, -3);
                         
                         if (!self.pendown) {
                             self.disableCursor();
@@ -162,24 +167,19 @@
                             imageData = context.getImageData(0, 0, cursor.width(), cursor.height()),
                             h = imageData.height,
                             w = imageData.width,
-                            red,
-                            green,
-                            blue,
                             alpha,
                             average,
+                            index,
                             j,
                             i;
 
                         for (i = 0; i < w; i++) {
                             for(j = 0; j < h; j++) {
                                 index = (i * 4) * w + (j * 4);
-                              	red   = imageData.data[index];	  
-                              	green = imageData.data[index + 1];
-                              	blue  = imageData.data[index + 2];	  
-                              	alpha = imageData.data[index + 3];	 
-                              	average = (red + green + blue) / 3; 	  
+                                alpha = imageData.data[index + 3];   
+                                average = (imageData.data[index] + imageData.data[index + 1] + imageData.data[index + 2]) / 3;       
 
-                                imageData.data[index] = average;	  
+                                imageData.data[index] = average;      
                                 imageData.data[index + 1] = average;
                                 imageData.data[index + 2] = average;
                                 imageData.data[index + 3] = alpha;
@@ -293,7 +293,7 @@
                                     } catch (e) {}
                                 }
                             } else {
-                                throw "ProcNotFound"
+                                throw "ProcNotFound";
                             }
                         },
                         
@@ -361,26 +361,23 @@
                             this.moveTo(x, y);
                         },
                         
-                        exportimage: function() {
-                            document.location.href = this.el[0].toDataURL("image/png").replace("image/png", "image/octet-stream");
-                        },
-                        
                         help: function(command) {
                             var name,
-                                messages = ["------------------------------------"],
+                                breaker = "------------------------------------",
+                                messages = [breaker],
                                 help;
                                 
                             if (command && (help = _help[command])) {    
                                 messages.push(command + " " + help[0]);
                                 messages.push(help[1]);
                             } else {
-                                for (var name in this.commands) {
+                                for (name in this.commands) {
                                     if (_aliases.indexOf(name) < 0) { messages.push(name); }
                                 }
                                 
                                 messages = ["Type 'HELP <em>COMMAND</em>' for more info"].concat(messages.sort());
                             }    
-                            messages.push("------------------------------------");
+                            messages.push(breaker);
                             
                             return messages;
                         }
@@ -453,7 +450,7 @@
                         
                         return value;
                     }
-                }
+                };
                 
                 $(document).ready(function() {
                     var tortuga = new Tortuga({el: "#workspace", cursor: "#tortuga"}),
@@ -461,17 +458,13 @@
                         logo = document.createElement("canvas"),
                         length = 200;
                         
-                        logo.width = length;
-            			logo.height = length;
-            			logo.style.width = length + "px";
-            			logo.style.height = length + "px";
-            			
+                        logo.width = logo.height = length;
+                        logo.style.width = logo.style.height = length + "px";
                         
-                    tortuga.drawCursor(logo.getContext("2d"), {height: length, width: length}, {x: length/2, y: length/2}, 300, 5, .8);
+                        
+                    tortuga.drawCursor(logo.getContext("2d"), {height: length, width: length}, {x: length/2, y: length/2}, 300, 5, 0.8);
                     
-                    var random = Math.round(Math.random() * 25);
-                    
-                    if (random == 1) {
+                    if (Math.round(Math.random() * 25) == 1) {
                         $("body").css("background-image", "url(" + logo.toDataURL("image/png") + ")");
                     } else {
                         $("#logo img").attr("src", logo.toDataURL("image/png")).parent().fadeIn(2000);

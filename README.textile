@@ -2,7 +2,10 @@ h2. Documentation
 
 h3. About
 
-This originated as an entry for the An Event Apart 10k "contest":http://10k.aneventapart.com/.  Inspired by nostalgia and the LOGO turtle drawing program that some of us used to play with back in the day.  It is not an implementation of LOGO, but it does emulate some of the features of the language.  Below is a list of commands.  Happy drawing.
+This originated as an entry for the An Event Apart 10k "contest":http://10k.aneventapart.com/.  Inspired by 
+nostalgia and the LOGO turtle drawing program that some of us used to play with back in the day.  It is not 
+an implementation of LOGO, but it does emulate some of the features of the language.  Below is a list of commands.  
+Happy drawing.
 
 h3. Commands
 
@@ -18,7 +21,7 @@ h3. Commands
 * *HOME* - Moves the turtle back to its starting position
 * *CLEARSCREEN* - Clears the canvas, moves the turtle to its starting position, and resets the command history
 * *CLEAN* - Clears the canvas and resets the command history
-* *LINEWIDTH* - Sets the width of the pen in pixels
+* *PENWIDTH* - Sets the width of the pen in pixels
 * *MOVETO __x__ __y__* - Moves the turtle to the supplied coordinates.  Takes pendown/penup state into account 
 
 h4. Experimental
